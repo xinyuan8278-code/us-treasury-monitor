@@ -1,0 +1,52 @@
+name: 美债监控 · 定时更新（周一/三/五）
+
+# 更新计划：每周一、周三、周五各一次，09:30（北京时间）= 01:30 UTC
+# 其余配置（抓取脚本、数据源、页面）均未改动
+on:
+  schedule:
+    - cron: '30 1 * * 1,3,5'
+  workflow_dispatch:            # 保留手动触发，便于即时刷新
+
+permissions:
+  contents: write               # 需要把新生成的 data.js 提交回仓库
+
+concurrency:
+  group: treasury-scheduled-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 抓取美债 CMT 收益率并生成 data.js
+        run: python fetch_us_treasury.py
+
+      - name: 提交 data.js
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.js
+          if git diff --staged --quiet; then
+            echo "data.js 无变化（非新增交易日），跳过提交"
+          else
+            git commit -m "data: 一三五定时刷新（北京时间 09:30）"
+            git push
+          fi
+
+      - name: 发布到 Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ]; then
+            echo "::warning::未配置 NETLIFY_AUTH_TOKEN，本次仅更新仓库 data.js，未发布到线上。"
+            exit 0
+          fi
+          python deploy_netlify.py --site-name us-treasury-monitor

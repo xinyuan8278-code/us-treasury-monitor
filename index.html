@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>美债 5Y / 10Y / 20Y 收益率监控</title>
+<script src="data.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg-soft: #0f151e;
+    --panel: #121a24;
+    --panel-2: #16202c;
+    --border: #223142;
+    --border-soft: #1a2532;
+    --text: #e9f0f8;
+    --text-2: #b6c4d4;
+    --muted: #7d8fa3;
+    --up: #ff5c66;
+    --down: #2ecc8f;
+    --flat: #7d8fa3;
+    --y5: #ffd166;
+    --y10: #ff6b6b;
+    --y20: #4dabf7;
+    --accent: #4c8dff;
+    --gold: #ffc65c;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 28px 20px 56px;
+    min-height: 100vh;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(820px 420px at 12% -8%, rgba(76,141,255,.14), transparent 60%),
+      radial-gradient(680px 380px at 92% 4%, rgba(255,107,107,.08), transparent 62%);
+    pointer-events: none; z-index: 0;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    align-items: center; justify-content: space-between;
+    padding-bottom: 20px; margin-bottom: 22px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 46px; height: 46px; border-radius: 12px; flex: none;
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 15px; letter-spacing: .5px; color: #fff;
+    background: linear-gradient(145deg, #2f6fbf, #4c8dff 55%, #79b8ff);
+    box-shadow: 0 6px 20px rgba(76,141,255,.28);
+  }
+  h1 { font-size: 21px; font-weight: 700; letter-spacing: .2px; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
+    background: rgba(76,141,255,.12); color: #8fbcff; border: 1px solid rgba(76,141,255,.26);
+  }
+  .badge.ghost {
+    background: rgba(255,255,255,.03); color: var(--muted); border-color: var(--border);
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #2ecc8f; box-shadow: 0 0 8px #2ecc8f; }
+
+  /* ---------- kpi ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 18px; }
+  .kpi {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px 15px; position: relative; overflow: hidden;
+  }
+  .kpi::after {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--kbar, var(--accent)); opacity: .85;
+  }
+  .kpi-name { font-size: 12px; color: var(--muted); letter-spacing: .3px; }
+  .kpi-val { font-size: 32px; font-weight: 750; letter-spacing: -.5px; margin: 6px 0 2px; }
+  .kpi-val .u { font-size: 15px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+  .kpi-chg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    font-size: 11.5px; font-weight: 650; padding: 3px 8px; border-radius: 6px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border-soft); color: var(--text-2);
+    white-space: nowrap;
+  }
+  .chip.up { color: #ff8087; background: rgba(255,92,102,.10); border-color: rgba(255,92,102,.24); }
+  .chip.down { color: #4fd8a3; background: rgba(46,204,143,.10); border-color: rgba(46,204,143,.24); }
+  .chip.flat { color: var(--muted); }
+  .kpi-sub { font-size: 11.5px; color: var(--muted); margin-top: 9px; }
+
+  /* ---------- panels ---------- */
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; margin-bottom: 18px;
+  }
+  .panel-head {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    align-items: center; justify-content: space-between; margin-bottom: 14px;
+  }
+  .panel-head h2 { font-size: 15px; font-weight: 650; letter-spacing: .2px; }
+  .dim { color: var(--muted); font-weight: 500; font-size: 13px; margin-left: 4px; }
+  .seg { display: inline-flex; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 9px; padding: 3px; }
+  .seg button {
+    font: inherit; font-size: 12px; font-weight: 600; color: var(--muted);
+    background: none; border: 0; padding: 5px 14px; border-radius: 7px; cursor: pointer;
+    transition: all .16s ease;
+  }
+  .seg button:hover { color: var(--text-2); }
+  .seg button.active { background: rgba(76,141,255,.16); color: #9cc4ff; }
+
+  .chart-box { position: relative; height: 340px; }
+  .chart-box.sm { height: 200px; }
+
+  /* ---------- stats strip ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  .stat {
+    background: var(--bg-soft); border: 1px solid var(--border-soft);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .stat .l { font-size: 11px; color: var(--muted); }
+  .stat .v { font-size: 15px; font-weight: 650; margin-top: 3px; }
+
+  /* ---------- table ---------- */
+  .tbl-wrap { max-height: 460px; overflow: auto; border-radius: 10px; border: 1px solid var(--border-soft); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 12px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--panel-2); color: var(--muted);
+    font-weight: 600; font-size: 12px; letter-spacing: .3px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border-soft); }
+  tbody tr:last-child { border-bottom: 0; }
+  tbody tr:hover { background: rgba(76,141,255,.05); }
+  tbody tr.newest { background: rgba(76,141,255,.07); }
+  tbody tr.newest td:first-child { color: #9cc4ff; font-weight: 650; }
+  .num { font-variant-numeric: tabular-nums; }
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .flat { color: var(--flat); }
+  .pill { display:inline-block; padding: 2px 7px; border-radius: 6px; font-size: 12px; font-weight: 620; }
+  .pill.up { background: rgba(255,92,102,.11); }
+  .pill.down { background: rgba(46,204,143,.11); }
+  .pill.flat { background: rgba(255,255,255,.05); }
+
+  /* ---------- brief ---------- */
+  .brief { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .brief ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .brief li { display: flex; gap: 9px; font-size: 13.5px; color: var(--text-2); line-height: 1.6; }
+  .brief li::before {
+    content: ""; flex: none; width: 6px; height: 6px; margin-top: 8px;
+    border-radius: 50%; background: var(--accent);
+  }
+  .brief strong { color: var(--text); font-weight: 650; }
+  .brief .box {
+    background: var(--bg-soft); border: 1px solid var(--border-soft);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .brief .box h3 { font-size: 12.5px; color: var(--muted); font-weight: 620; margin-bottom: 10px; letter-spacing: .3px; }
+
+  footer {
+    color: var(--muted); font-size: 12px; line-height: 1.8;
+    border-top: 1px solid var(--border-soft); padding-top: 16px;
+  }
+  footer a { color: #7fb2ff; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  .loading { color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center; }
+
+  @media (max-width: 1000px) {
+    .kpis { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .kpis { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .brief { grid-template-columns: 1fr; }
+    .chart-box { height: 280px; }
+    body { padding: 20px 14px 44px; }
+    h1 { font-size: 18px; }
+    .kpi-val { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">UST</div>
+      <div>
+        <h1 id="title">美债 5Y / 10Y / 20Y 收益率监控</h1>
+        <p class="sub" id="subtitle">固收投资经理 · 每日监控仪表盘</p>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge"><span class="dot"></span>数据日期（美东）<b id="badge-date">—</b></span>
+      <span class="badge ghost">CMT 口径 · 美国财政部官方数据</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="loading">正在加载数据…</div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var D = window.TREASURY_DATA;
+  if (!D || !D.latest) {
+    document.getElementById('main').innerHTML =
+      '<div class="loading">未读取到数据层（data.js）。请确认 data.js 与 index.html 位于同一目录，并已由抓取脚本生成。</div>';
+    return;
+  }
+
+  var CLS = function (v) { return (v === null || v === undefined || v === 0) ? 'flat' : (v > 0 ? 'up' : 'down'); };
+  var fmtPct = function (v) { return (v === null || v === undefined) ? '—' : v.toFixed(2); };
+  var fmtBp = function (v, withSign) {
+    if (v === null || v === undefined) return '—';
+    var s = (withSign !== false && v > 0) ? '+' : '';
+    return s + v + ' bp';
+  };
+  var fmtBpPlain = function (v) { return (v === null || v === undefined) ? '—' : v + ''; };
+
+  /* ---------------- KPI cards ---------------- */
+  var L = D.latest;
+  var kpis = [
+    { name: '5Y Treasury', val: L.y5, unit: '%', bar: 'var(--y5)',
+      d: L.dY5Bp, w: L.w5Y5Bp, dLabel: '日', wLabel: '5日' },
+    { name: '10Y Treasury', val: L.y10, unit: '%', bar: 'var(--y10)',
+      d: L.dY10Bp, w: L.w5Y10Bp, dLabel: '日', wLabel: '5日' },
+    { name: '20Y Treasury', val: L.y20, unit: '%', bar: 'var(--y20)',
+      d: L.dY20Bp, w: L.w5Y20Bp, dLabel: '日', wLabel: '5日' },
+    { name: '10Y − 5Y 利差', val: L.spread10_5Bp, unit: 'bp', bar: 'var(--accent)',
+      d: L.dSpread10_5Bp, w: null, dLabel: '日', wLabel: '5日' },
+    { name: '20Y − 10Y 利差', val: L.spreadBp, unit: 'bp', bar: 'var(--gold)',
+      d: L.dSpreadBp, w: L.w5SpreadBp, dLabel: '日', wLabel: '5日' }
+  ];
+
+  var kpiHtml = '';
+  kpis.forEach(function (k) {
+    var isBp = k.unit === 'bp';
+    kpiHtml +=
+      '<div class="kpi" style="--kbar:' + k.bar + '">' +
+        '<div class="kpi-name">' + k.name + '</div>' +
+        '<div class="kpi-val">' + (isBp ? fmtBpPlain(k.val) : fmtPct(k.val)) +
+          '<span class="u">' + k.unit + '</span></div>' +
+        '<div class="kpi-chg">' +
+          '<span class="chip ' + CLS(k.d) + '">' + k.dLabel + ' ' + fmtBp(k.d) + '</span>' +
+          '<span class="chip ' + CLS(k.w) + '">' + k.wLabel + ' ' + fmtBp(k.w) + '</span>' +
+        '</div>' +
+        '<div class="kpi-sub">' +
+          (isBp
+            ? '对比 ' + (L.prevDate || '—') + '（日）' + (k.w !== null ? ' · ' + (L.fiveAgoDate || '—') + '（5日）' : '')
+            : '5Y / 10Y / 20Y 均为 CMT 固定期限点位') +
+        '</div>' +
+      '</div>';
+  });
+
+  /* ---------------- main markup ---------------- */
+  document.getElementById('main').innerHTML =
+    '<section class="kpis">' + kpiHtml + '</section>' +
+
+    '<section class="panel">' +
+      '<div class="panel-head">' +
+        '<h2>收益率走势<span class="dim">5Y vs 10Y vs 20Y（CMT，%）</span></h2>' +
+        '<div class="seg" id="ranges">' +
+          '<button data-n="20" class="active">20 交易日</button>' +
+          '<button data-n="60">60 交易日</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="chart-box"><canvas id="c-yield"></canvas></div>' +
+      '<div class="stats" id="stats"></div>' +
+    '</section>' +
+
+    '<section class="panel">' +
+      '<div class="panel-head"><h2>长端期限利差<span class="dim">20Y − 10Y（bp）</span></h2></div>' +
+      '<div class="chart-box sm"><canvas id="c-spread"></canvas></div>' +
+    '</section>' +
+
+    '<section class="panel">' +
+      '<div class="panel-head"><h2>最近交易日明细<span class="dim" id="tbl-count"></span></h2></div>' +
+      '<div class="tbl-wrap"><table>' +
+        '<thead><tr>' +
+          '<th>日期</th><th>5Y</th><th>10Y</th><th>Δ10Y</th><th>20Y</th><th>Δ20Y</th><th>20Y−10Y</th>' +
+        '</tr></thead><tbody id="tbody"></tbody></table></div>' +
+    '</section>' +
+
+    '<section class="panel">' +
+      '<h2 style="margin-bottom:14px">投资经理速览</h2>' +
+      '<div class="brief">' +
+        '<div class="box"><h3>当日读数</h3><ul id="brief-now"></ul></div>' +
+        '<div class="box"><h3>观察要点</h3><ul id="brief-watch"></ul></div>' +
+      '</div>' +
+    '</section>' +
+
+    '<footer>' +
+      '<div>数据口径：Daily Treasury Par Yield Curve Rates（CMT），由纽约联储约于美东 15:30 取得场外市场收盘买方报价；5Y / 10Y / 20Y 为曲线上固定期限 CMT 点位，不一定对应某一只实际流通债券。</div>' +
+      '<div>数据源：<a id="src-link" href="#" target="_blank" rel="noopener">U.S. Department of the Treasury</a></div>' +
+      '<div>本页由自动化任务「美债5Y/10Y/20Y收益率每日监控」自动更新（每周一、周三、周五 09:30 北京时间） · 数据生成时间 <b id="gen-at">—</b></div>' +
+    '</footer>';
+
+  document.getElementById('badge-date').textContent = L.date;
+  document.getElementById('gen-at').textContent = (D.meta && D.meta.generatedAt) || '—';
+  if (D.meta) {
+    if (D.meta.sourceUrl) document.getElementById('src-link').href = D.meta.sourceUrl;
+    if (D.meta.title) document.getElementById('title').textContent = D.meta.title;
+    if (D.meta.subtitle) document.getElementById('subtitle').textContent = D.meta.subtitle;
+  }
+
+  /* ---------------- table ---------------- */
+  var H = D.history || [];
+  var rowsHtml = '';
+  for (var i = H.length - 1; i >= 0; i--) {
+    var r = H[i], p = H[i - 1];
+    var d10 = (p && p.y10 !== null && r.y10 !== null) ? Math.round((r.y10 - p.y10) * 100) : null;
+    var d20 = (p && p.y20 !== null && r.y20 !== null) ? Math.round((r.y20 - p.y20) * 100) : null;
+    rowsHtml +=
+      '<tr' + (i === H.length - 1 ? ' class="newest"' : '') + '>' +
+        '<td>' + r.date + '</td>' +
+        '<td class="num">' + fmtPct(r.y5) + '</td>' +
+        '<td class="num">' + fmtPct(r.y10) + '</td>' +
+        '<td class="num ' + CLS(d10) + '">' + (d10 === null ? '—' : (d10 > 0 ? '+' : '') + d10) + '</td>' +
+        '<td class="num">' + fmtPct(r.y20) + '</td>' +
+        '<td class="num ' + CLS(d20) + '">' + (d20 === null ? '—' : (d20 > 0 ? '+' : '') + d20) + '</td>' +
+        '<td class="num"><span class="pill ' + (r.spread > 0 ? 'up' : (r.spread < 0 ? 'down' : 'flat')) + '">' +
+          (r.spread === null ? '—' : (r.spread > 0 ? '+' : '') + r.spread + ' bp') + '</span></td>' +
+      '</tr>';
+  }
+  document.getElementById('tbody').innerHTML = rowsHtml;
+  document.getElementById('tbl-count').textContent = '共 ' + H.length + ' 个交易日';
+
+  /* ---------------- brief ---------------- */
+  var dir = function (v) { return v > 0 ? '上行' : (v < 0 ? '下行' : '持平'); };
+  document.getElementById('brief-now').innerHTML =
+    '<li>5Y 最新 <strong>' + fmtPct(L.y5) + '%</strong>，日' + dir(L.dY5Bp) + ' <strong class="' + CLS(L.dY5Bp) + '">' + fmtBp(L.dY5Bp) + '</strong>，近 5 个交易日 <strong class="' + CLS(L.w5Y5Bp) + '">' + fmtBp(L.w5Y5Bp) + '</strong>。</li>' +
+    '<li>10Y 最新 <strong>' + fmtPct(L.y10) + '%</strong>，日' + dir(L.dY10Bp) + ' <strong class="' + CLS(L.dY10Bp) + '">' + fmtBp(L.dY10Bp) + '</strong>，近 5 个交易日 <strong class="' + CLS(L.w5Y10Bp) + '">' + fmtBp(L.w5Y10Bp) + '</strong>。</li>' +
+    '<li>20Y 最新 <strong>' + fmtPct(L.y20) + '%</strong>，日' + dir(L.dY20Bp) + ' <strong class="' + CLS(L.dY20Bp) + '">' + fmtBp(L.dY20Bp) + '</strong>，近 5 个交易日 <strong class="' + CLS(L.w5Y20Bp) + '">' + fmtBp(L.w5Y20Bp) + '</strong>。</li>' +
+    '<li>10Y−5Y 利差 <strong>' + fmtBpPlain(L.spread10_5Bp) + ' bp</strong>（日变动 <strong class="' + CLS(L.dSpread10_5Bp) + '">' + fmtBp(L.dSpread10_5Bp) + '</strong>）；20Y−5Y 利差 <strong>' + fmtBpPlain(L.spread20_5Bp) + ' bp</strong>（日变动 <strong class="' + CLS(L.dSpread20_5Bp) + '">' + fmtBp(L.dSpread20_5Bp) + '</strong>）。</li>' +
+    '<li>20Y−10Y 利差 <strong>' + fmtBpPlain(L.spreadBp) + ' bp</strong>，日变动 <strong class="' + CLS(L.dSpreadBp) + '">' + fmtBp(L.dSpreadBp) + '</strong>，近 5 个交易日 <strong class="' + CLS(L.w5SpreadBp) + '">' + fmtBp(L.w5SpreadBp) + '</strong>。</li>';
+
+  var spreadTrend = (L.w5SpreadBp > 0) ? '走阔' : (L.w5SpreadBp < 0 ? '收窄' : '基本持平');
+  document.getElementById('brief-watch').innerHTML =
+    '<li>长端 20Y 相对 10Y 的变化可用于判断<strong>长端期限溢价</strong>与<strong>财政供给压力</strong>的边际变化；近 5 个交易日利差' + spreadTrend + '。</li>' +
+    '<li>当长端上行幅度大于短端（利差走阔），通常反映期限溢价抬升或供给担忧；若为曲线整体平移，则更多指向通胀与政策路径重定价。</li>' +
+    '<li>数据采用 CMT 口径，为曲线上固定期限点位，与具体券种的到期收益率存在细微差异。</li>';
+
+  /* ---------------- charts ---------------- */
+  if (typeof Chart === 'undefined') {
+    var yb = document.getElementById('c-yield'), sb = document.getElementById('c-spread');
+    if (yb) yb.parentNode.innerHTML = '<div class="loading" style="padding:70px 0">图表库未加载（vendor/chart.umd.min.js 缺失），已跳过走势图；上方指标与下方明细不受影响。</div>';
+    if (sb) sb.parentNode.innerHTML = '<div class="loading" style="padding:40px 0">图表库未加载。</div>';
+    return;
+  }
+  var css = function (n) { return getComputedStyle(document.body).getPropertyValue(n).trim(); };
+  Chart.defaults.color = css('--muted') || '#7d8fa3';
+  Chart.defaults.font.family = "'Inter', -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  Chart.defaults.font.size = 11.5;
+
+  var lineGrad = function (ctx, area, color) {
+    var g = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+    g.addColorStop(0, color.replace('rgb', 'rgba').replace(')', ',0.20)'));
+    g.addColorStop(1, color.replace('rgb', 'rgba').replace(')', ',0.00)'));
+    return g;
+  };
+
+  var gridColor = 'rgba(255,255,255,0.055)';
+
+  var yieldChart = new Chart(document.getElementById('c-yield'), {
+    type: 'line',
+    data: { labels: [], datasets: [] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top', align: 'end',
+          labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 18, padding: 16, font: { size: 12, weight: '600' } }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(10,14,20,.94)', borderColor: 'rgba(255,255,255,.10)', borderWidth: 1,
+          titleColor: '#e9f0f8', bodyColor: '#b6c4d4', padding: 11, cornerRadius: 9, displayColors: true,
+          callbacks: {
+            label: function (c) { return ' ' + c.dataset.label + '：' + (c.parsed.y === null ? '—' : c.parsed.y.toFixed(2) + '%'); }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, border: { color: gridColor }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+        y: {
+          grid: { color: gridColor }, border: { display: false },
+          ticks: { callback: function (v) { return v.toFixed(2) + '%'; } }
+        }
+      },
+      elements: { line: { tension: 0.28, borderWidth: 2.2 }, point: { radius: 0, hoverRadius: 4, hoverBorderWidth: 2 } }
+    }
+  });
+
+  var spreadChart = new Chart(document.getElementById('c-spread'), {
+    type: 'bar',
+    data: { labels: [], datasets: [] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(10,14,20,.94)', borderColor: 'rgba(255,255,255,.10)', borderWidth: 1,
+          titleColor: '#e9f0f8', bodyColor: '#b6c4d4', padding: 11, cornerRadius: 9,
+          callbacks: { label: function (c) { return ' 20Y−10Y：' + c.parsed.y + ' bp'; } }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, border: { color: gridColor }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+        y: {
+          grid: { color: gridColor }, border: { display: false },
+          ticks: { callback: function (v) { return v + ' bp'; } }
+        }
+      }
+    }
+  });
+
+  function render(n) {
+    var slice = H.slice(-n);
+    var labels = slice.map(function (r) { return r.date.slice(5); });
+
+    yieldChart.data.labels = labels;
+    yieldChart.data.datasets = [
+      {
+        label: '5Y', data: slice.map(function (r) { return r.y5; }),
+        borderColor: '#ffd166', backgroundColor: function (c) {
+          return c.chart.chartArea ? lineGrad(c.chart.ctx, c.chart.chartArea, 'rgb(255,209,102)') : 'transparent';
+        },
+        fill: true, pointBackgroundColor: '#ffd166'
+      },
+      {
+        label: '10Y', data: slice.map(function (r) { return r.y10; }),
+        borderColor: '#ff6b6b', backgroundColor: function (c) {
+          return c.chart.chartArea ? lineGrad(c.chart.ctx, c.chart.chartArea, 'rgb(255,107,107)') : 'transparent';
+        },
+        fill: true, pointBackgroundColor: '#ff6b6b'
+      },
+      {
+        label: '20Y', data: slice.map(function (r) { return r.y20; }),
+        borderColor: '#4dabf7', backgroundColor: function (c) {
+          return c.chart.chartArea ? lineGrad(c.chart.ctx, c.chart.chartArea, 'rgb(77,171,247)') : 'transparent';
+        },
+        fill: true, pointBackgroundColor: '#4dabf7'
+      }
+    ];
+    yieldChart.update();
+
+    spreadChart.data.labels = labels;
+    spreadChart.data.datasets = [{
+      label: '20Y−10Y',
+      data: slice.map(function (r) { return r.spread; }),
+      backgroundColor: slice.map(function (r) { return r.spread > 0 ? 'rgba(255,92,102,.72)' : 'rgba(46,204,143,.72)'; }),
+      borderRadius: 3, borderSkipped: false, maxBarThickness: 22
+    }];
+    spreadChart.update();
+
+    /* stats strip over current window */
+    var y5s = slice.map(function (r) { return r.y5; }).filter(function (v) { return v !== null; });
+    var y10s = slice.map(function (r) { return r.y10; }).filter(function (v) { return v !== null; });
+    var y20s = slice.map(function (r) { return r.y20; }).filter(function (v) { return v !== null; });
+    var sps = slice.map(function (r) { return r.spread; }).filter(function (v) { return v !== null; });
+    var avg = function (a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; };
+    var last = slice[slice.length - 1] || {};
+    var first = slice[0] || {};
+
+    var stats = [
+      { l: '窗口区间 · 5Y', v: fmtPct(Math.min.apply(null, y5s)) + '% – ' + fmtPct(Math.max.apply(null, y5s)) + '%' },
+      { l: '窗口区间 · 10Y', v: fmtPct(Math.min.apply(null, y10s)) + '% – ' + fmtPct(Math.max.apply(null, y10s)) + '%' },
+      { l: '窗口区间 · 20Y', v: fmtPct(Math.min.apply(null, y20s)) + '% – ' + fmtPct(Math.max.apply(null, y20s)) + '%' },
+      {
+        l: '利差 首 → 末',
+        v: (first.spread === null || last.spread === null) ? '—' :
+           (first.spread > 0 ? '+' : '') + first.spread + ' → ' + (last.spread > 0 ? '+' : '') + last.spread + ' bp'
+      }
+    ];
+    document.getElementById('stats').innerHTML = stats.map(function (s) {
+      return '<div class="stat"><div class="l">' + s.l + '</div><div class="v">' + s.v + '</div></div>';
+    }).join('');
+  }
+
+  document.getElementById('ranges').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    render(parseInt(b.dataset.n, 10));
+  });
+
+  render(Math.min(20, H.length));
+})();
+</script>
+</body>
+</html>
