@@ -1,0 +1,7 @@
+.netlify-token
+.netlify-site-id
+.github-token
+__pycache__/
+*.pyc
+data.js.baseline
+fresh.txt
