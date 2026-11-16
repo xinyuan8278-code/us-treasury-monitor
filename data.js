@@ -5,40 +5,33 @@ window.TREASURY_DATA = {
     "subtitle": "固收投资经理 · 每日监控仪表盘",
     "sourceName": "U.S. Department of the Treasury — Daily Treasury Par Yield Curve Rates (CMT)",
     "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve&field_tdr_date_value=2026",
-    "generatedAt": "2026-11-13 16:30",
+    "generatedAt": "2026-11-16 16:19",
     "schedule": "每周一、周三、周五 09:30（北京时间）自动更新",
     "unit": "percent",
     "spreadUnit": "bp"
   },
   "latest": {
-    "date": "2026-11-12",
-    "y5": 4.95,
-    "y10": 5.1,
-    "y20": 5.48,
-    "spreadBp": 38,
-    "spread10_5Bp": 15,
-    "spread20_5Bp": 53,
-    "dY5Bp": 14,
-    "dY10Bp": 12,
-    "dY20Bp": 9,
-    "dSpreadBp": -3,
-    "dSpread10_5Bp": -2,
-    "dSpread20_5Bp": -5,
-    "w5Y5Bp": 26,
-    "w5Y10Bp": 20,
-    "w5Y20Bp": 18,
-    "w5SpreadBp": -2,
-    "prevDate": "2026-11-10",
-    "fiveAgoDate": "2026-11-04"
+    "date": "2026-11-13",
+    "y5": 4.98,
+    "y10": 5.15,
+    "y20": 5.52,
+    "spreadBp": 37,
+    "spread10_5Bp": 17,
+    "spread20_5Bp": 54,
+    "dY5Bp": 3,
+    "dY10Bp": 5,
+    "dY20Bp": 4,
+    "dSpreadBp": -1,
+    "dSpread10_5Bp": 2,
+    "dSpread20_5Bp": 1,
+    "w5Y5Bp": 39,
+    "w5Y10Bp": 31,
+    "w5Y20Bp": 25,
+    "w5SpreadBp": -6,
+    "prevDate": "2026-11-12",
+    "fiveAgoDate": "2026-11-05"
   },
   "history": [
-    {
-      "date": "2026-08-18",
-      "y5": 4.37,
-      "y10": 4.71,
-      "y20": 5.28,
-      "spread": 57
-    },
     {
       "date": "2026-08-19",
       "y5": 4.35,
@@ -451,6 +444,13 @@ window.TREASURY_DATA = {
       "y10": 5.1,
       "y20": 5.48,
       "spread": 38
+    },
+    {
+      "date": "2026-11-13",
+      "y5": 4.98,
+      "y10": 5.15,
+      "y20": 5.52,
+      "spread": 37
     }
   ]
 };
