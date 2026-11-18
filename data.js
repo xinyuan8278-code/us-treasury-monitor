@@ -5,47 +5,33 @@ window.TREASURY_DATA = {
     "subtitle": "固收投资经理 · 每日监控仪表盘",
     "sourceName": "U.S. Department of the Treasury — Daily Treasury Par Yield Curve Rates (CMT)",
     "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve&field_tdr_date_value=2026",
-    "generatedAt": "2026-11-16 16:19",
+    "generatedAt": "2026-11-18 16:53",
     "schedule": "每周一、周三、周五 09:30（北京时间）自动更新",
     "unit": "percent",
     "spreadUnit": "bp"
   },
   "latest": {
-    "date": "2026-11-13",
-    "y5": 4.98,
-    "y10": 5.15,
-    "y20": 5.52,
-    "spreadBp": 37,
-    "spread10_5Bp": 17,
-    "spread20_5Bp": 54,
-    "dY5Bp": 3,
-    "dY10Bp": 5,
-    "dY20Bp": 4,
-    "dSpreadBp": -1,
-    "dSpread10_5Bp": 2,
-    "dSpread20_5Bp": 1,
-    "w5Y5Bp": 39,
-    "w5Y10Bp": 31,
-    "w5Y20Bp": 25,
-    "w5SpreadBp": -6,
-    "prevDate": "2026-11-12",
-    "fiveAgoDate": "2026-11-05"
+    "date": "2026-11-17",
+    "y5": 4.9,
+    "y10": 5.1,
+    "y20": 5.5,
+    "spreadBp": 40,
+    "spread10_5Bp": 20,
+    "spread20_5Bp": 60,
+    "dY5Bp": -3,
+    "dY10Bp": -2,
+    "dY20Bp": -1,
+    "dSpreadBp": 1,
+    "dSpread10_5Bp": 1,
+    "dSpread20_5Bp": 2,
+    "w5Y5Bp": 23,
+    "w5Y10Bp": 22,
+    "w5Y20Bp": 21,
+    "w5SpreadBp": -1,
+    "prevDate": "2026-11-16",
+    "fiveAgoDate": "2026-11-09"
   },
   "history": [
-    {
-      "date": "2026-08-19",
-      "y5": 4.35,
-      "y10": 4.65,
-      "y20": 5.17,
-      "spread": 52
-    },
-    {
-      "date": "2026-08-20",
-      "y5": 4.39,
-      "y10": 4.69,
-      "y20": 5.2,
-      "spread": 51
-    },
     {
       "date": "2026-08-21",
       "y5": 4.43,
@@ -451,6 +437,20 @@ window.TREASURY_DATA = {
       "y10": 5.15,
       "y20": 5.52,
       "spread": 37
+    },
+    {
+      "date": "2026-11-16",
+      "y5": 4.93,
+      "y10": 5.12,
+      "y20": 5.51,
+      "spread": 39
+    },
+    {
+      "date": "2026-11-17",
+      "y5": 4.9,
+      "y10": 5.1,
+      "y20": 5.5,
+      "spread": 40
     }
   ]
 };
