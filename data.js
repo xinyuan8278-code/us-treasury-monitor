@@ -5,47 +5,33 @@ window.TREASURY_DATA = {
     "subtitle": "固收投资经理 · 每日监控仪表盘",
     "sourceName": "U.S. Department of the Treasury — Daily Treasury Par Yield Curve Rates (CMT)",
     "sourceUrl": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve&field_tdr_date_value=2026",
-    "generatedAt": "2026-11-23 17:30",
+    "generatedAt": "2026-11-25 18:10",
     "schedule": "每周一、周三、周五 09:30（北京时间）自动更新",
     "unit": "percent",
     "spreadUnit": "bp"
   },
   "latest": {
-    "date": "2026-11-20",
-    "y5": 4.71,
-    "y10": 4.92,
-    "y20": 5.34,
+    "date": "2026-11-24",
+    "y5": 4.69,
+    "y10": 4.91,
+    "y20": 5.33,
     "spreadBp": 42,
-    "spread10_5Bp": 21,
-    "spread20_5Bp": 63,
-    "dY5Bp": -15,
-    "dY10Bp": -12,
-    "dY20Bp": -9,
-    "dSpreadBp": 3,
-    "dSpread10_5Bp": 3,
-    "dSpread20_5Bp": 6,
-    "w5Y5Bp": -27,
-    "w5Y10Bp": -23,
-    "w5Y20Bp": -18,
-    "w5SpreadBp": 5,
-    "prevDate": "2026-11-19",
-    "fiveAgoDate": "2026-11-13"
+    "spread10_5Bp": 22,
+    "spread20_5Bp": 64,
+    "dY5Bp": -5,
+    "dY10Bp": -1,
+    "dY20Bp": 0,
+    "dSpreadBp": 1,
+    "dSpread10_5Bp": 4,
+    "dSpread20_5Bp": 5,
+    "w5Y5Bp": -21,
+    "w5Y10Bp": -19,
+    "w5Y20Bp": -17,
+    "w5SpreadBp": 2,
+    "prevDate": "2026-11-23",
+    "fiveAgoDate": "2026-11-17"
   },
   "history": [
-    {
-      "date": "2026-08-26",
-      "y5": 4.37,
-      "y10": 4.66,
-      "y20": 5.17,
-      "spread": 51
-    },
-    {
-      "date": "2026-08-27",
-      "y5": 4.38,
-      "y10": 4.67,
-      "y20": 5.18,
-      "spread": 51
-    },
     {
       "date": "2026-08-28",
       "y5": 4.48,
@@ -450,6 +436,20 @@ window.TREASURY_DATA = {
       "y5": 4.71,
       "y10": 4.92,
       "y20": 5.34,
+      "spread": 42
+    },
+    {
+      "date": "2026-11-23",
+      "y5": 4.74,
+      "y10": 4.92,
+      "y20": 5.33,
+      "spread": 41
+    },
+    {
+      "date": "2026-11-24",
+      "y5": 4.69,
+      "y10": 4.91,
+      "y20": 5.33,
       "spread": 42
     }
   ]
